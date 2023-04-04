@@ -3,10 +3,12 @@ use crate::{ALLIANCES, NUM_SERIES};
 use nalgebra::one;
 use std::cmp::Ordering;
 use std::fmt;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Schedule<'a> {
-    series: [&'a Series; NUM_SERIES],
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Schedule {
+    series: [Series; NUM_SERIES],
 }
 
 fn is_valid(entry: &Vec<&Series>) -> bool {
@@ -17,7 +19,7 @@ fn is_valid(entry: &Vec<&Series>) -> bool {
     check == AllianceMatrix::repeat(1)
 }
 
-impl Schedule<'_> {
+impl Schedule {
     pub fn check_back_to_back(&self) -> bool {
         for int in 0..NUM_SERIES - 1 {
             for team in self.series[int].get_last_teams() {
@@ -32,7 +34,7 @@ impl Schedule<'_> {
     pub fn from_series(entry: Vec<&Series>) -> Option<Schedule> {
         if is_valid(&entry) {
             Some(Schedule {
-                series: entry.try_into().unwrap(),
+                series: entry.iter().cloned().cloned().collect::<Vec<Series>>().try_into().unwrap(),
             })
         } else {
             None
@@ -75,7 +77,7 @@ impl Schedule<'_> {
     }
 }
 
-impl fmt::Display for Schedule<'_> {
+impl fmt::Display for Schedule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -83,19 +85,19 @@ impl fmt::Display for Schedule<'_> {
             self.avg_min_delta(),
             self.max_field_sep()
         )?;
-        for s in self.series {
+        for s in &self.series {
             write!(f, "{}", s)?;
         }
         Ok(())
     }
 }
-impl PartialOrd for Schedule<'_> {
+impl PartialOrd for Schedule {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.avg_min_delta().partial_cmp(&other.avg_min_delta())
     }
 }
 
-impl Ord for Schedule<'_> {
+impl Ord for Schedule {
     fn cmp(&self, other: &Self) -> Ordering {
         self.avg_min_delta()
             .partial_cmp(&other.avg_min_delta())

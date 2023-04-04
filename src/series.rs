@@ -3,10 +3,11 @@ use crate::{ALLIANCES, MATCHES_PER_SERIES, NUM_SERIES};
 use itertools::Itertools;
 use nalgebra::SMatrix;
 use std::fmt;
+use serde::{Deserialize, Serialize};
 
 pub type AllianceMatrix = SMatrix<usize, ALLIANCES, ALLIANCES>;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Series {
     pub matches: [Match; MATCHES_PER_SERIES],
     pub plays: AllianceMatrix,
