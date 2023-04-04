@@ -2,14 +2,15 @@ use crate::r#match::Match;
 use crate::{ALLIANCES, MATCHES_PER_SERIES, NUM_SERIES};
 use itertools::Itertools;
 use nalgebra::SMatrix;
-use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 pub type AllianceMatrix = SMatrix<usize, ALLIANCES, ALLIANCES>;
 
 #[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Series {
     pub matches: [Match; MATCHES_PER_SERIES],
+    #[serde(skip)]
     pub plays: AllianceMatrix,
 }
 

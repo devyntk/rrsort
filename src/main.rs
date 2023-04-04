@@ -7,16 +7,16 @@ mod r#match;
 mod schedule;
 mod series;
 
-use std::fs::File;
-use std::io::{BufReader, BufWriter};
-use std::path::PathBuf;
 use crate::schedule::Schedule;
 use crate::series::Series;
-use indicatif::ParallelProgressIterator;
+use clap::Parser;
+use indicatif::{ParallelProgressIterator, ProgressStyle};
 use itertools::Itertools;
 use rayon::iter::ParallelBridge;
 use rayon::prelude::*;
-use clap::{Parser};
+use std::fs::File;
+use std::io::{BufReader, BufWriter};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -31,7 +31,7 @@ struct Cli {
 
     /// Force generation of new schedule
     #[arg(short, long)]
-    force_new: bool
+    force_new: bool,
 }
 
 const ALLIANCES: usize = 6;
@@ -64,13 +64,17 @@ fn get_valid_schedules(take: Option<u64>) -> Vec<Schedule> {
         permut_count
     };
 
-
     all_series
         .iter()
         .permutations(NUM_SERIES)
         .take(count as usize)
         .par_bridge()
         .progress_count(count)
+        .with_style(
+            ProgressStyle::with_template("[{eta}] {wide_bar} {pos:>7}/{len:7}")
+                .unwrap()
+                .progress_chars("##-"),
+        )
         .filter_map(|s| Schedule::from_series(s))
         .filter(|s| s.check_back_to_back())
         .collect()
