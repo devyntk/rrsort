@@ -40,7 +40,7 @@ fn main() {
         permut_count
     };
 
-    let schedules: Vec<Schedule> = all_series
+    let mut schedules: Vec<Schedule> = all_series
         .iter()
         .permutations(NUM_SERIES)
         .take(count as usize)
@@ -54,5 +54,8 @@ fn main() {
         println!("{}", schedule)
     }
 
-    println!("Valid schedules: {:?}", &schedules.len())
+    println!("Valid schedules: {:?}", &schedules.len());
+
+    schedules.sort_unstable();
+    println!("best: {}", schedules.last().unwrap())
 }

@@ -6,7 +6,7 @@ use std::fmt;
 
 pub type AllianceMatrix = SMatrix<usize, ALLIANCES, ALLIANCES>;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Series {
     pub matches: [Match; MATCHES_PER_SERIES],
     pub plays: AllianceMatrix,
@@ -15,7 +15,7 @@ pub struct Series {
 impl Series {
     pub fn get_permutations() -> Vec<Series> {
         let mut res = Vec::new();
-        for matches in (1..ALLIANCES + 1)
+        for matches in (1..=ALLIANCES)
             .permutations(ALLIANCES)
             .map(|s| {
                 s.chunks(2)
@@ -31,7 +31,7 @@ impl Series {
                 plays: SMatrix::from_diagonal_element(0),
             };
             matches.iter().for_each(|m| series.mark_played(m));
-            println!("{:?}", series);
+            println!("{:?}, {:?}", series, series.get_fields(0));
             res.push(series);
         }
         println!("Total generated Series: {:?}", res.len());
@@ -44,7 +44,7 @@ impl Series {
     }
 
     pub fn get_match_num(&self) -> [usize; ALLIANCES] {
-        (1..ALLIANCES + 1)
+        (1..=ALLIANCES)
             .map(|a| {
                 for i in 0..MATCHES_PER_SERIES {
                     if self.matches[i].0 == a || self.matches[i].1 == a {

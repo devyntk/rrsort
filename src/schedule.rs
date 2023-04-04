@@ -1,9 +1,10 @@
 use crate::series::{AllianceMatrix, Series};
 use crate::{ALLIANCES, NUM_SERIES};
 use nalgebra::one;
+use std::cmp::Ordering;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Schedule<'a> {
     series: [&'a Series; NUM_SERIES],
 }
@@ -61,11 +62,16 @@ impl Schedule<'_> {
             .map(|i| self.series[i].get_fields(i))
             .collect();
 
-        (0..ALLIANCES)
+        fields
             .into_iter()
-            .map(|a| fields.iter().map(|i| i[a] as f64).sum::<f64>() / NUM_SERIES as f64)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap()
+            .fold([0 as isize; ALLIANCES], |mut acc, x| {
+                for (idx, val) in x.iter().enumerate() {
+                    acc[idx] += val;
+                }
+                acc
+            })
+            .into_iter()
+            .sum::<isize>() as f64
     }
 }
 
@@ -73,7 +79,7 @@ impl fmt::Display for Schedule<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "red | blue | (avg min turnaround {}, max field sep {}",
+            "red | blue | (avg min turnaround {}, max field sep {})",
             self.avg_min_delta(),
             self.max_field_sep()
         )?;
@@ -81,5 +87,19 @@ impl fmt::Display for Schedule<'_> {
             write!(f, "{}", s)?;
         }
         Ok(())
+    }
+}
+impl PartialOrd for Schedule<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.avg_min_delta().partial_cmp(&other.avg_min_delta())
+    }
+}
+
+impl Ord for Schedule<'_> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.avg_min_delta()
+            .partial_cmp(&other.avg_min_delta())
+            .unwrap()
+            .reverse()
     }
 }
