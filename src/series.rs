@@ -33,10 +33,8 @@ impl Series {
                 plays: SMatrix::from_diagonal_element(0),
             };
             matches.iter().for_each(|m| series.mark_played(m));
-            println!("{:?}, {:?}", series, series.get_fields(0));
             res.push(series);
         }
-        println!("Total generated Series: {:?}", res.len());
         return res;
     }
 

@@ -72,8 +72,7 @@ fn get_valid_schedules(take: Option<u64>) -> Vec<Schedule> {
         .progress_count(count)
         .with_style(
             ProgressStyle::with_template("[{eta}] {wide_bar} {pos:>7}/{len:7}")
-                .unwrap()
-                .progress_chars("##-"),
+                .unwrap(),
         )
         .filter_map(|s| Schedule::from_series(s))
         .filter(|s| s.check_back_to_back())
@@ -84,27 +83,26 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let mut schedules: Vec<Schedule> = if let Some(path) = cli.schedules {
         if !path.exists() || cli.force_new {
+            println!("Generating new schedules to {:?}", path.canonicalize()?);
             let schedules = get_valid_schedules(cli.take_top);
             let file = File::create(path)?;
             let writer = BufWriter::new(file);
             serde_json::to_writer(writer, &schedules)?;
             schedules
         } else {
+            println!("Reading schedules from {:?}", path.canonicalize()?);
             let file = File::open(path)?;
             let reader = BufReader::new(file);
             serde_json::from_reader(reader)?
         }
     } else {
+        println!("Generating new schedules");
         get_valid_schedules(cli.take_top)
     };
-
-    for schedule in &schedules {
-        println!("{}", schedule)
-    }
 
     println!("Valid schedules: {:?}", &schedules.len());
 
     schedules.sort_unstable();
-    println!("best: {}", schedules.last().unwrap());
+    println!("best: \n {}", schedules.last().unwrap());
     Ok(())
 }
